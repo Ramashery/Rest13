@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquarella | Premium Italian Restaurant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary: #f7fbff;
+            --secondary: #fff8f8;
+            --accent: #d4c0b0;
+            --text-dark: #2a2a2a;
+            --text-light: #5a5a5a;
+            --gold: #d4af37;
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', sans-serif;
+            font-weight: 300;
+            color: var(--text-dark);
+            background-color: var(--primary);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, h4, h5 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        section {
+            padding: 5rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header & Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1.5rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.4s ease;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            font-weight: 400;
+            position: relative;
+            padding-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+
+        nav a:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover:after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.2)), 
+                        url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #e6f7ffaa, #fff5f5aa);
+            z-index: -1;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 800px;
+            padding: 0 2rem;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: textReveal 1.2s forwards 0.3s;
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            color: var(--text-dark);
+            margin-bottom: 2.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: textReveal 1.2s forwards 0.6s;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 2px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: textReveal 1.2s forwards 0.9s;
+        }
+
+        .btn:hover {
+            background: var(--text-dark);
+            transform: translateY(-3px);
+        }
+
+        @keyframes textReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Menu Section */
+        .menu-section {
+            background: var(--secondary);
+            padding: 6rem 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .menu-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .tab-btn {
+            padding: 0.8rem 2rem;
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--text-dark);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .menu-item {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            height: 380px;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-item-front, .menu-item-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .menu-item-front {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu-item-back {
+            background: white;
+            transform: rotateY(180deg);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .menu-item.flipped .menu-item-front {
+            transform: rotateY(180deg);
+        }
+
+        .menu-item.flipped .menu-item-back {
+            transform: rotateY(0deg);
+        }
+
+        .menu-img {
+            height: 220px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .menu-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .menu-name {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-price {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 30px;
+            height: 30px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Gallery Section */
+        .gallery-section {
+            padding: 6rem 2rem;
+            background: var(--primary);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-auto-rows: 250px;
+            gap: 1.5rem;
+            grid-auto-flow: dense;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .gallery-item:nth-child(3n) {
+            grid-row: span 2;
+        }
+
+        .gallery-item:nth-child(4n) {
+            grid-column: span 2;
+        }
+
+        /* Map Section */
+        .map-section {
+            padding: 6rem 2rem;
+            background: var(--secondary);
+        }
+
+        .map-container {
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        }
+
+        #restaurant-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-logo span {
+            color: var(--accent);
+        }
+
+        .footer-crafted {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 2rem;
+        }
+
+        /* Sticky Contact Buttons */
+        .contact-buttons {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .contact-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            animation: pulse 8s infinite;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-5px);
+        }
+
+        .contact-btn.whatsapp {
+            background: #25D366;
+            animation-delay: 0s;
+        }
+
+        .contact-btn.telegram {
+            background: #0088cc;
+            animation-delay: 4s;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .lightbox.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .lightbox-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.2rem;
+            }
+            
+            .menu-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-item:nth-child(4n) {
+                grid-column: span 1;
+            }
+            
+            nav ul {
+                display: none;
+            }
+            
+            .contact-buttons {
+                bottom: 1rem;
+                right: 1rem;
+            }
+            
+            .contact-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="#" class="logo">Aquarel<span>la</span></a>
+        <nav>
+            <ul>
+                <li><a href="#hero">Home</a></li>
+                <li><a href="#menu">Menu</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#location">Location</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Authentic Italian Cuisine</h1>
+            <p>Experience the taste of Italy in the heart of Tbilisi</p>
+            <a href="#menu" class="btn">Discover Our Menu</a>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="menu-section">
+        <div class="container">
+            <h2 class="section-title">Our Culinary Journey</h2>
+            
+            <div class="menu-tabs">
+                <button class="tab-btn active" data-category="all">All</button>
+                <button class="tab-btn" data-category="antipasti">Antipasti</button>
+                <button class="tab-btn" data-category="primi">Primi</button>
+                <button class="tab-btn" data-category="dolci">Dolci</button>
+            </div>
+            
+            <div class="menu-grid">
+                <!-- Antipasti -->
+                <div class="menu-item" data-category="antipasti">
+                    <div class="menu-item-front">
+                        <div class="menu-img" style="background-image: url('https://images.unsplash.com/photo-1606491956689-2ea866880c84?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80')"></div>
+                        <div class="menu-content">
+                            <h3 class="menu-name">Bruschetta al Pomodoro</h3>
+                            <div class="menu-info">
+                                <p>Toasted bread topped with tomatoes, garlic, and basil</p>
+                                <div class="menu-price">€12</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item-back">
+                        <h3>Bruschetta al Pomodoro</h3>
+                        <p>Our signature bruschetta features freshly baked sourdough bread rubbed with garlic, topped with ripe heirloom tomatoes, fresh basil, and a drizzle of extra virgin olive oil. Served with a balsamic reduction.</p>
+                        <p>Ingredients: Sourdough bread, heirloom tomatoes, fresh basil, garlic, extra virgin olive oil, sea salt, balsamic glaze.</p>
+                        <p>Chef's note: Best enjoyed immediately after preparation to preserve the crispiness of the bread.</p>
+                        <button class="close-btn">✕</button>
+                    </div>
+                </div>
+                
+                <div class="menu-item" data-category="antipasti">
+                    <div class="menu-item-front">
+                        <div class="menu-img" style="background-image: url('https://images.unsplash.com/photo-1606491956746-9fad0b0359d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80')"></div>
+                        <div class="menu-content">
+                            <h3 class="menu-name">Carpaccio di Manzo</h3>
+                            <div class="menu-info">
+                                <p>Thinly sliced beef tenderloin with arugula and parmesan</p>
+                                <div class="menu-price">€16</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item-back">
+                        <h3>Carpaccio di Manzo</h3>
+                        <p>Premium beef tenderloin sliced paper-thin and served with fresh arugula, shaved parmesan, capers, and our special truffle aioli. Finished with lemon juice and extra virgin olive oil.</p>
+                        <p>Ingredients: Beef tenderloin, arugula, parmigiano reggiano, capers, truffle oil, lemon, olive oil.</p>
+                        <p>Chef's note: The beef is frozen before slicing to achieve the perfect thinness.</p>
+                        <button class="close-btn">✕</button>
+                    </div>
+                </div>
+                
+                <!-- Primi -->
+                <div class="menu-item" data-category="primi">
+                    <div class="menu-item-front">
+                        <div class="menu-img" style="background-image: url('https://images.unsplash.com/photo-1598866594230-a7c12756260f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80')"></div>
+                        <div class="menu-content">
+                            <h3 class="menu-name">Risotto ai Funghi</h3>
+                            <div class="menu-info">
+                                <p>Creamy arborio rice with wild mushrooms and truffle</p>
+                                <div class="menu-price">€22</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item-back">
+                        <h3>Risotto ai Funghi</h3>
+                        <p>Authentic Italian risotto prepared with carnaroli rice, a variety of wild mushrooms, white wine, and vegetable broth. Finished with parmesan cheese and a drizzle of truffle oil.</p>
+                        <p>Ingredients: Carnaroli rice, porcini mushrooms, chanterelles, vegetable broth, white wine, shallots, garlic, parmesan, truffle oil.</p>
+                        <p>Chef's note: Stirred constantly for 18 minutes to achieve the perfect creamy consistency.</p>
+                        <button class="close-btn">✕</button>
+                    </div>
+                </div>
+                
+                <div class="menu-item" data-category="primi">
+                    <div class="menu-item-front">
+                        <div class="menu-img" style="background-image: url('https://images.unsplash.com/photo-1593504049359-74330189a345?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80')"></div>
+                        <div class="menu-content">
+                            <h3 class="menu-name">Spaghetti Carbonara</h3>
+                            <div class="menu-info">
+                                <p>Classic Roman pasta with guanciale, eggs, and pecorino</p>
+                                <div class="menu-price">€19</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item-back">
+                        <h3>Spaghetti Carbonara</h3>
+                        <p>Traditional Roman dish made with spaghetti, cured guanciale, fresh eggs, pecorino romano cheese, and freshly cracked black pepper. Prepared using the authentic method without cream.</p>
+                        <p>Ingredients: Spaghetti, guanciale, eggs, pecorino romano, black pepper.</p>
+                        <p>Chef's note: The heat from the pasta cooks the eggs to create a creamy sauce without scrambling.</p>
+                        <button class="close-btn">✕</button>
+                    </div>
+                </div>
+                
+                <div class="menu-item" data-category="primi">
+                    <div class="menu-item-front">
+                        <div class="menu-img" style="background-image: url('https://images.unsplash.com/photo-1622973536968-3ead9e780960?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80')"></div>
+                        <div class="menu-content">
+                            <h3 class="menu-name">Pappardelle al Cinghiale</h3>
+                            <div class="menu-info">
+                                <p>Wild boar ragù with broad pasta ribbons</p>
+                                <div class="menu-price">€24</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item-back">
+                        <h3>Pappardelle al Cinghiale</h3>
+                        <p>Handmade pappardelle pasta served with a rich, slow-cooked wild boar ragù. The sauce is simmered for 6 hours with tomatoes, red wine, carrots, celery, and aromatic herbs.</p>
+                        <p>Ingredients: Fresh pappardelle, wild boar, tomatoes, red wine, carrots, celery, onions, garlic, herbs.</p>
+                        <p>Chef's note: Our ragù is prepared in small batches to maintain the depth of flavor.</p>
+                        <button class="close-btn">✕</button>
+                    </div>
+                </div>
+                
+                <div class="menu-item" data-category="primi">
+                    <div class="menu-item-front">
+                        <div class="menu-img" style="background-image: url('https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80')"></div>
+                        <div class="menu-content">
+                            <h3 class="menu-name">Gnocchi al Gorgonzola</h3>
+                            <div class="menu-info">
+                                <p>Potato dumplings in creamy gorgonzola sauce</p>
+                                <div class="menu-price">€20</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item-back">
+                        <h3>Gnocchi al Gorgonzola</h3>
+                        <p>Homemade potato gnocchi served in a rich gorgonzola cream sauce with toasted walnuts and a hint of nutmeg. Garnished with fresh parsley and cracked black pepper.</p>
+                        <p>Ingredients: Potato gnocchi, gorgonzola cheese, cream, walnuts, nutmeg, parsley.</p>
+                        <p>Chef's note: Our gnocchi are made daily using russet potatoes for the perfect texture.</p>
+                        <button class="close-btn">✕</button>
+                    </div>
+                </div>
+                
+                <!-- Dolci -->
+                <div class="menu-item" data-category="dolci">
+                    <div class="menu-item-front">
+                        <div class="menu-img" style="background-image: url('https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80')"></div>
+                        <div class="menu-content">
+                            <h3 class="menu-name">Tiramisù Classico</h3>
+                            <div class="menu-info">
+                                <p>Espresso-soaked ladyfingers with mascarpone cream</p>
+                                <div class="menu-price">€10</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item-back">
+                        <h3>Tiramisù Classico</h3>
+                        <p>Our signature tiramisù features layers of espresso-dipped savoiardi biscuits and a light, creamy mixture of mascarpone, eggs, and sugar. Dusted with cocoa powder and served chilled.</p>
+                        <p>Ingredients: Savoiardi biscuits, espresso coffee, mascarpone, eggs, sugar, cocoa powder.</p>
+                        <p>Chef's note: We use authentic Italian mascarpone for the creamiest texture.</p>
+                        <button class="close-btn">✕</button>
+                    </div>
+                </div>
+                
+                <div class="menu-item" data-category="dolci">
+                    <div class="menu-item-front">
+                        <div class="menu-img" style="background-image: url('https://images.unsplash.com/photo-1621303837174-89787a7d4729?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80')"></div>
+                        <div class="menu-content">
+                            <h3 class="menu-name">Panna Cotta ai Frutti di Bosco</h3>
+                            <div class="menu-info">
+                                <p>Vanilla cream custard with mixed berry compote</p>
+                                <div class="menu-price">€9</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item-back">
+                        <h3>Panna Cotta ai Frutti di Bosco</h3>
+                        <p>Silky smooth vanilla panna cotta made with cream, milk, sugar, and vanilla bean. Served with a vibrant mixed berry compote and garnished with fresh mint.</p>
+                        <p>Ingredients: Cream, milk, sugar, vanilla bean, gelatin, mixed berries, lemon juice, mint.</p>
+                        <p>Chef's note: Our panna cotta sets for exactly 6 hours to achieve the perfect consistency.</p>
+                        <button class="close-btn">✕</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="gallery-section">
+        <div class="container">
+            <h2 class="section-title">Our Atmosphere</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Restaurant interior">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Wine selection">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1578474846511-04ba529f0b88?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Pasta dish">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1554679665-f5537f187268?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Dining area">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Risotto dish">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Gnocchi dish">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1592861956120-e524fc739696?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Chef preparing dish">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Wine bar">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Dessert">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1606491956689-2ea866880c84?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Antipasti">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section id="location" class="map-section">
+        <div class="container">
+            <h2 class="section-title">Visit Us</h2>
+            <div class="map-container">
+                <div id="restaurant-map"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">Aquarel<span>la</span></div>
+                <p>Shota Rustaveli St 17, Tbilisi, Georgia</p>
+                <p>Open: Mon-Sat 12:00 - 23:00, Sun 12:00 - 21:00</p>
+                <p>Reservations: +995 32 123 4567</p>
+                <p class="footer-crafted">Crafted by Alex Johnson • Portfolio Piece</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Contact Buttons -->
+    <div class="contact-buttons">
+        <a href="https://wa.me/+79119396075" class="contact-btn whatsapp">&#x1F4AC;</a>
+        <a href="https://t.me/ramashery" class="contact-btn telegram">&#x2708;&#xFE0F;</a>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox">
+        <span class="lightbox-close">&times;</span>
+        <div class="lightbox-content">
+            <img src="" alt="Gallery image">
+        </div>
+    </div>
+
+    <script>
+        // Menu Tab Filtering
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const menuItems = document.querySelectorAll('.menu-item');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active tab
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Filter menu items
+                const category = btn.dataset.category;
+                menuItems.forEach(item => {
+                    if (category === 'all' || item.dataset.category === category) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Menu Item Flip Animation
+        const menuCards = document.querySelectorAll('.menu-item');
+        const closeBtns = document.querySelectorAll('.close-btn');
+        
+        menuCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('close-btn')) {
+                    card.classList.add('flipped');
+                }
+            });
+        });
+        
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                btn.closest('.menu-item').classList.remove('flipped');
+            });
+        });
+        
+        // Gallery Lightbox
+        const galleryItems = document.querySelectorAll('.gallery-item');
+        const lightbox = document.querySelector('.lightbox');
+        const lightboxImg = document.querySelector('.lightbox-content img');
+        const lightboxClose = document.querySelector('.lightbox-close');
+        
+        galleryItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const imgSrc = item.querySelector('img').src;
+                lightboxImg.src = imgSrc;
+                lightbox.classList.add('active');
+            });
+        });
+        
+        lightboxClose.addEventListener('click', () => {
+            lightbox.classList.remove('active');
+        });
+        
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                lightbox.classList.remove('active');
+            }
+        });
+        
+        // Leaflet Map
+        const map = L.map('restaurant-map').setView([41.6997, 44.7975], 17);
+        
+        // Custom watercolor tile layer
+        L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
+            attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.',
+            subdomains: 'abcd',
+            minZoom: 1,
+            maxZoom: 16,
+            ext: 'jpg'
+        }).addTo(map);
+        
+        // Custom marker
+        const restaurantIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -40]
+        });
+        
+        L.marker([41.6997, 44.7975], {icon: restaurantIcon}).addTo(map)
+            .bindPopup('Aquarella<br>Premium Italian Restaurant')
+            .openPopup();
+        
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        // Observe sections
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+        
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.padding = '1rem 2rem';
+                header.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.1)';
+            } else {
+                header.style.padding = '1.5rem 2rem';
+                header.style.boxShadow = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
